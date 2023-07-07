@@ -33,7 +33,20 @@ export class AuthService {
     }
   }
 
-  signin() {
-    return 'This is signin route!';
+  async signin(dto: AuthDto) {
+    const user = await this.prismaService.user.findFirst({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    if (!user) throw new ForbiddenException('Invalid Credentials');
+    const pwMatches = await argon.verify(user.hash, dto.password);
+
+    if (!pwMatches) throw new ForbiddenException('Invalid Credentials');
+    delete user.hash;
+    return user;
+
+    return;
   }
 }
